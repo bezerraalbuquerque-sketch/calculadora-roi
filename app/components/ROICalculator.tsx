@@ -239,14 +239,22 @@ export default function ROICalculator() {
     const effectiveMgmtHours = isCLT ? mgmtHours * 1.2 : mgmtHours;
     const hoursWasteCost = effectiveMgmtHours * managerHourlyRate;
 
-    // Custo de erros CLT: multiplicado por 1.7 (encargos sobre erro + reflexo 13º/férias)
-    const baseErrorCost = monthlySalesVolume * (errorRate / 100);
+    // Total de comissões pagas pelo time no mês
+    const totalCommissions = monthlySalesVolume * (commissionPct / 100);
+
+    // Custo de erros calculado sobre o total de comissões (não sobre o faturamento)
+    // CLT: multiplicado por 1.7 (encargos sobre erro + reflexo 13º/férias)
+    const baseErrorCost = totalCommissions * (errorRate / 100);
     const errorCost = isCLT ? baseErrorCost * 1.7 : baseErrorCost;
 
     // Risco jurídico CLT: 10% das comissões anuais como passivo potencial (mensal = /12)
     const legalRiskMonthly = isCLT
-      ? (avgCommission * teamSize * 12 * 0.1) / 12
+      ? (totalCommissions * 12 * 0.1) / 12
       : 0;
+
+    // Recuperação de Churn por Visibilidade: 1% das vendas recuperadas
+    // com acompanhamento em tempo real (evita burnout e leads esquecidos)
+    const churnRecovery = monthlySalesVolume * 0.01;
 
     const inefficiencyCost = hoursWasteCost + errorCost + legalRiskMonthly;
 
@@ -256,19 +264,21 @@ export default function ROICalculator() {
     // Custo estimado RevTrack (R$ 49 por usuário/mês)
     const revtrackCost = teamSize * 49;
 
-    // Com RevTrack: pessoal + plano (risco jurídico mitigado, não entra no "com RevTrack")
+    // Com RevTrack: pessoal + plano (risco jurídico e churn mitigados)
     const revtrackTotal = totalPeopleCost + revtrackCost;
 
-    // Economia
-    const monthlySavings = inefficiencyCost - revtrackCost;
+    // Economia = ineficiência eliminada + churn recuperado - custo do plano
+    const monthlySavings = inefficiencyCost + churnRecovery - revtrackCost;
     const annualSavings = monthlySavings * 12;
 
     return {
       totalPeopleCost,
+      totalCommissions,
       hoursWasteCost,
       effectiveMgmtHours,
       errorCost,
       legalRiskMonthly,
+      churnRecovery,
       inefficiencyCost,
       manualTotal,
       revtrackCost,
@@ -484,7 +494,7 @@ export default function ROICalculator() {
               icon={AlertTriangle}
               label="Custo de Erros / Mês"
               value={fmt(calc.errorCost)}
-              sub={inputs.regime === "clt" ? `${inputs.errorRate.toFixed(1)}% × 1.7× encargos CLT` : `${inputs.errorRate.toFixed(1)}% do volume de vendas`}
+              sub={inputs.regime === "clt" ? `${inputs.errorRate.toFixed(1)}% s/ comissões × 1.7× CLT` : `${inputs.errorRate.toFixed(1)}% sobre ${fmt(calc.totalCommissions)} em comissões`}
               color="red"
             />
             <MetricCard
@@ -571,11 +581,12 @@ export default function ROICalculator() {
               {[
                 { label: "Custo total com pessoal (encargos + comissão)", value: calc.totalPeopleCost, neutral: true },
                 { label: inputs.regime === "clt" ? "Horas de gestão (+20% reflexos CLT)" : "Horas de gestão desperdiçadas", value: calc.hoursWasteCost, bad: true },
-                { label: inputs.regime === "clt" ? "Erros em comissões + encargos sobre erro (×1.7)" : "Erros em comissões e verbas", value: calc.errorCost, bad: true },
+                { label: inputs.regime === "clt" ? `Erros s/ comissões (${fmt(calc.totalCommissions)}) × 1.7× CLT` : `Erros s/ comissões pagas (${fmt(calc.totalCommissions)})`, value: calc.errorCost, bad: true },
                 ...(inputs.regime === "clt" && calc.legalRiskMonthly > 0
                   ? [{ label: "Risco jurídico por inconsistência salarial (CLT)", value: calc.legalRiskMonthly, bad: true, neutral: false, good: false }]
                   : []
                 ),
+                { label: "Recuperação de Churn por Visibilidade (1% das vendas)", value: calc.churnRecovery, good: true },
                 { label: "Plano RevTrack (substituição completa)", value: calc.revtrackCost, good: true },
               ].map(({ label, value, neutral, bad, good }) => (
                 <div key={label} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
