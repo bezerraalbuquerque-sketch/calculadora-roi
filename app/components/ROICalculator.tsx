@@ -241,8 +241,8 @@ export default function ROICalculator() {
     // Custo total manual
     const manualTotal = totalPeopleCost + inefficiencyCost;
 
-    // Custo estimado RevTrack (baseado no time)
-    const revtrackCost = teamSize <= 5 ? 397 : teamSize <= 15 ? 797 : teamSize <= 30 ? 1497 : 2497;
+    // Custo estimado RevTrack (R$ 49 por usuário/mês)
+    const revtrackCost = teamSize * 49;
 
     // Economia
     const monthlySavings = inefficiencyCost - revtrackCost;
@@ -491,7 +491,7 @@ export default function ROICalculator() {
               icon={Shield}
               label="Plano RevTrack / Mês"
               value={fmt(calc.revtrackCost)}
-              sub={`Para ${inputs.teamSize} vendedor${inputs.teamSize > 1 ? "es" : ""}`}
+              sub={`R$ 49 × ${inputs.teamSize} vendedor${inputs.teamSize > 1 ? "es" : ""}`}
               color="blue"
             />
           </div>
