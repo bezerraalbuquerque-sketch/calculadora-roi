@@ -354,8 +354,8 @@ export default function ROICalculator() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4">
-      {/* Header */}
+    <div className="py-6 px-4 pb-10">
+      {/* Intro */}
       <div className="max-w-5xl mx-auto mb-10 text-center">
         <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
           <Zap size={12} />
