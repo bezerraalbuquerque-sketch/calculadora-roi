@@ -516,6 +516,16 @@ export default function ROICalculator() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            <div className="mt-5 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">Economia Mensal</p>
+                <p className="text-2xl font-bold text-green-600">{fmt(Math.max(0, calc.monthlySavings))}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-green-600 font-medium mb-1">por mês</p>
+                <p className="text-sm text-green-500">{fmt(Math.max(0, calc.annualSavings))} / ano</p>
+              </div>
+            </div>
           </div>
 
           {/* Breakdown */}
