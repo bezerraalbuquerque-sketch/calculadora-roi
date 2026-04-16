@@ -221,11 +221,13 @@ export default function ROICalculator() {
   const calc = useMemo(() => {
     const { teamSize, regime, baseSalary, commissionPct, benefits, monthlySalesVolume, mgmtHours, errorRate, managerHourlyRate } = inputs;
 
+    const isCLT = regime === "clt";
+
     const avgCommission = (baseSalary * commissionPct) / 100;
     const grossPerPerson = baseSalary + avgCommission;
 
     let costPerPerson: number;
-    if (regime === "clt") {
+    if (isCLT) {
       costPerPerson = grossPerPerson * 1.75 + benefits;
     } else {
       costPerPerson = grossPerPerson * 1.06;
@@ -233,10 +235,20 @@ export default function ROICalculator() {
 
     const totalPeopleCost = costPerPerson * teamSize;
 
-    // Custo de ineficiência
-    const hoursWasteCost = mgmtHours * managerHourlyRate;
-    const errorCost = monthlySalesVolume * (errorRate / 100);
-    const inefficiencyCost = hoursWasteCost + errorCost;
+    // Fator de complexidade CLT: +20% nas horas de gestão por reflexos trabalhistas
+    const effectiveMgmtHours = isCLT ? mgmtHours * 1.2 : mgmtHours;
+    const hoursWasteCost = effectiveMgmtHours * managerHourlyRate;
+
+    // Custo de erros CLT: multiplicado por 1.7 (encargos sobre erro + reflexo 13º/férias)
+    const baseErrorCost = monthlySalesVolume * (errorRate / 100);
+    const errorCost = isCLT ? baseErrorCost * 1.7 : baseErrorCost;
+
+    // Risco jurídico CLT: 10% das comissões anuais como passivo potencial (mensal = /12)
+    const legalRiskMonthly = isCLT
+      ? (avgCommission * teamSize * 12 * 0.1) / 12
+      : 0;
+
+    const inefficiencyCost = hoursWasteCost + errorCost + legalRiskMonthly;
 
     // Custo total manual
     const manualTotal = totalPeopleCost + inefficiencyCost;
@@ -244,17 +256,19 @@ export default function ROICalculator() {
     // Custo estimado RevTrack (R$ 49 por usuário/mês)
     const revtrackCost = teamSize * 49;
 
+    // Com RevTrack: pessoal + plano (risco jurídico mitigado, não entra no "com RevTrack")
+    const revtrackTotal = totalPeopleCost + revtrackCost;
+
     // Economia
     const monthlySavings = inefficiencyCost - revtrackCost;
     const annualSavings = monthlySavings * 12;
 
-    // Com RevTrack (apenas custo de pessoal + plano)
-    const revtrackTotal = totalPeopleCost + revtrackCost;
-
     return {
       totalPeopleCost,
       hoursWasteCost,
+      effectiveMgmtHours,
       errorCost,
+      legalRiskMonthly,
       inefficiencyCost,
       manualTotal,
       revtrackCost,
@@ -470,21 +484,21 @@ export default function ROICalculator() {
               icon={AlertTriangle}
               label="Custo de Erros / Mês"
               value={fmt(calc.errorCost)}
-              sub={`${inputs.errorRate.toFixed(1)}% do volume de vendas`}
+              sub={inputs.regime === "clt" ? `${inputs.errorRate.toFixed(1)}% × 1.7× encargos CLT` : `${inputs.errorRate.toFixed(1)}% do volume de vendas`}
               color="red"
             />
             <MetricCard
               icon={Clock}
               label="Custo de Horas / Mês"
               value={fmt(calc.hoursWasteCost)}
-              sub={`${inputs.mgmtHours}h × R$${inputs.managerHourlyRate}/h`}
+              sub={inputs.regime === "clt" ? `${calc.effectiveMgmtHours.toFixed(0)}h (+20% complexidade CLT)` : `${inputs.mgmtHours}h × R$${inputs.managerHourlyRate}/h`}
               color="yellow"
             />
             <MetricCard
               icon={DollarSign}
               label="Ineficiência Total / Mês"
               value={fmt(calc.inefficiencyCost)}
-              sub="Horas + erros em planilha"
+              sub={inputs.regime === "clt" ? "Erros + horas + risco jurídico" : "Horas + erros em planilha"}
               color="red"
             />
             <MetricCard
@@ -495,6 +509,28 @@ export default function ROICalculator() {
               color="blue"
             />
           </div>
+
+          {/* Alerta de risco jurídico CLT */}
+          {inputs.regime === "clt" && calc.legalRiskMonthly > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-start gap-3"
+            >
+              <AlertTriangle size={18} className="text-orange-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-orange-800 mb-0.5">
+                  Estimativa de Risco Jurídico (CLT)
+                </p>
+                <p className="text-sm text-orange-700">
+                  Inconsistências no cálculo de comissões geram reflexos em 13º, férias e verbas rescisórias.
+                  Passivo potencial estimado:{" "}
+                  <span className="font-bold">{fmt(calc.legalRiskMonthly)}/mês</span>{" "}
+                  ({fmt(calc.legalRiskMonthly * 12)}/ano) — equivalente a 10% das comissões anuais do time.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Chart */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
@@ -534,8 +570,12 @@ export default function ROICalculator() {
             <div className="space-y-3">
               {[
                 { label: "Custo total com pessoal (encargos + comissão)", value: calc.totalPeopleCost, neutral: true },
-                { label: "Horas de gestão desperdiçadas", value: calc.hoursWasteCost, bad: true },
-                { label: "Erros em comissões e verbas", value: calc.errorCost, bad: true },
+                { label: inputs.regime === "clt" ? "Horas de gestão (+20% reflexos CLT)" : "Horas de gestão desperdiçadas", value: calc.hoursWasteCost, bad: true },
+                { label: inputs.regime === "clt" ? "Erros em comissões + encargos sobre erro (×1.7)" : "Erros em comissões e verbas", value: calc.errorCost, bad: true },
+                ...(inputs.regime === "clt" && calc.legalRiskMonthly > 0
+                  ? [{ label: "Risco jurídico por inconsistência salarial (CLT)", value: calc.legalRiskMonthly, bad: true, neutral: false, good: false }]
+                  : []
+                ),
                 { label: "Plano RevTrack (substituição completa)", value: calc.revtrackCost, good: true },
               ].map(({ label, value, neutral, bad, good }) => (
                 <div key={label} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
