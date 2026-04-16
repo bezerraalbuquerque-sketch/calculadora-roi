@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { NumericFormat } from "react-number-format";
 import {
   BarChart,
   Bar,
@@ -115,13 +116,13 @@ function Slider({
 function NumberInput({
   label,
   value,
-  prefix,
+  isCurrency,
   suffix,
   onChange,
 }: {
   label: string;
   value: number;
-  prefix?: string;
+  isCurrency?: boolean;
   suffix?: string;
   onChange: (v: number) => void;
 }) {
@@ -129,14 +130,33 @@ function NumberInput({
     <div className="space-y-1.5">
       <label className="text-sm font-medium text-slate-700">{label}</label>
       <div className="flex items-center gap-1 border border-slate-200 rounded-xl px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
-        {prefix && <span className="text-slate-400 text-sm">{prefix}</span>}
-        <input
-          type="number"
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 outline-none text-slate-800 font-medium text-sm bg-transparent min-w-0"
-        />
-        {suffix && <span className="text-slate-400 text-sm">{suffix}</span>}
+        {isCurrency ? (
+          <NumericFormat
+            value={value === 0 ? "" : value}
+            onValueChange={({ floatValue }) => onChange(floatValue ?? 0)}
+            thousandSeparator="."
+            decimalSeparator=","
+            decimalScale={0}
+            allowNegative={false}
+            prefix="R$ "
+            placeholder="R$ 0"
+            className="flex-1 outline-none text-slate-800 font-medium text-sm bg-transparent min-w-0"
+          />
+        ) : (
+          <>
+            <NumericFormat
+              value={value === 0 ? "" : value}
+              onValueChange={({ floatValue }) => onChange(floatValue ?? 0)}
+              thousandSeparator="."
+              decimalSeparator=","
+              decimalScale={2}
+              allowNegative={false}
+              placeholder="0"
+              className="flex-1 outline-none text-slate-800 font-medium text-sm bg-transparent min-w-0"
+            />
+            {suffix && <span className="text-slate-400 text-sm">{suffix}</span>}
+          </>
+        )}
       </div>
     </div>
   );
@@ -392,7 +412,7 @@ export default function ROICalculator() {
             <NumberInput
               label="Salário Base Médio (R$)"
               value={inputs.baseSalary}
-              prefix="R$"
+              isCurrency
               onChange={set("baseSalary")}
             />
 
@@ -411,7 +431,7 @@ export default function ROICalculator() {
               <NumberInput
                 label="Benefícios por Pessoa (VR+VA+Saúde)"
                 value={inputs.benefits}
-                prefix="R$"
+                isCurrency
                 onChange={set("benefits")}
               />
             )}
@@ -427,7 +447,7 @@ export default function ROICalculator() {
             <NumberInput
               label="Volume de Vendas Mensal (R$)"
               value={inputs.monthlySalesVolume}
-              prefix="R$"
+              isCurrency
               onChange={set("monthlySalesVolume")}
             />
 
@@ -445,7 +465,7 @@ export default function ROICalculator() {
             <NumberInput
               label="Custo/Hora do Gestor (R$)"
               value={inputs.managerHourlyRate}
-              prefix="R$"
+              isCurrency
               suffix="/h"
               onChange={set("managerHourlyRate")}
             />
