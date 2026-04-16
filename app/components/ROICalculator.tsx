@@ -553,19 +553,19 @@ export default function ROICalculator() {
             </div>
           </div>
 
-          {/* Benefits list */}
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
-            <p className="text-sm font-semibold text-blue-800 mb-3">O que a RevTrack elimina do seu processo:</p>
+          {/* Problems eliminated */}
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-5">
+            <p className="text-sm font-semibold text-red-800 mb-3">O que a RevTrack elimina do seu processo:</p>
             <ul className="space-y-2">
               {[
-                "Cálculo automático de comissões com regras personalizadas",
-                "Alertas de divergência antes do fechamento da folha",
-                "Dashboard de comissões em tempo real para os vendedores",
-                "Relatórios prontos para eSocial e auditoria trabalhista",
-                "Redução de {h}h de gestão manual por mês".replace("{h}", String(inputs.mgmtHours)),
+                "Erros manuais e divergências de valores",
+                "Horas perdidas com planilhas complexas",
+                "Falta de transparência para os vendedores",
+                "Riscos de auditoria e passivos trabalhistas",
+                "Shadow Accounting (vendedores calculando por conta própria)",
               ].map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm text-blue-700">
-                  <CheckCircle size={15} className="text-blue-500 shrink-0 mt-0.5" />
+                <li key={item} className="flex items-start gap-2 text-sm text-red-700">
+                  <X size={15} className="text-red-500 shrink-0 mt-0.5" />
                   {item}
                 </li>
               ))}
