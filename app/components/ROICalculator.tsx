@@ -229,13 +229,10 @@ function LeadModal({
     setSending(true);
     const payload = {
       fields: [
-        { objectTypeId: "0-1", name: "firstname", value: lead.name },
-        { objectTypeId: "0-1", name: "email", value: lead.email },
-        { objectTypeId: "0-1", name: "phone", value: lead.phone },
-        { objectTypeId: "0-1", name: "roi_annual_savings", value: String(Math.round(calc.annualSavings)) },
-        { objectTypeId: "0-1", name: "team_size", value: String(inputs.teamSize) },
-        { objectTypeId: "0-1", name: "monthly_error_cost", value: String(Math.round(calc.errorCost)) },
-        { objectTypeId: "0-1", name: "regime", value: inputs.regime },
+        { name: "firstname", value: lead.name },
+        { name: "email", value: lead.email },
+        { name: "phone", value: lead.phone },
+        { name: "message", value: `Time: ${inputs.teamSize} vendedores | Regime: ${inputs.regime.toUpperCase()} | Economia anual estimada: ${fmt(Math.max(0, calc.annualSavings))} | Ineficiência/mês: ${fmt(calc.inefficiencyCost)}` },
       ],
       context: { pageUri: window.location.href, pageName: "Calculadora ROI RevTrack" },
     };
@@ -718,11 +715,14 @@ export default function ROICalculator() {
           {/* CTA */}
           <motion.button
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-            onClick={() => setShowModal(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-2 text-base transition-colors shadow-lg shadow-blue-200"
+            onClick={() => {
+              const url = buildWhatsAppUrl(inputs.teamSize, calc.inefficiencyCost);
+              window.open(url, "_blank");
+            }}
+            className="w-full bg-[#25D366] hover:bg-[#20b856] text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-2 text-base transition-colors shadow-lg shadow-green-200"
           >
-            <Mail size={18} />
-            Receber Relatório Detalhado no E-mail
+            <WhatsAppIcon />
+            Quero Testar Grátis
             <ChevronRight size={18} />
           </motion.button>
         </div>
