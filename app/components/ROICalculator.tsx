@@ -232,7 +232,6 @@ function LeadModal({
         { name: "firstname", value: lead.name },
         { name: "email", value: lead.email },
         { name: "phone", value: lead.phone },
-        { name: "message", value: `Time: ${inputs.teamSize} vendedores | Regime: ${inputs.regime.toUpperCase()} | Economia anual estimada: ${fmt(Math.max(0, calc.annualSavings))} | Ineficiência/mês: ${fmt(calc.inefficiencyCost)}` },
       ],
       context: { pageUri: window.location.href, pageName: "Calculadora ROI RevTrack" },
     };
