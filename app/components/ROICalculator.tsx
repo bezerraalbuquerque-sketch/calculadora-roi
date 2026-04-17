@@ -227,21 +227,19 @@ function LeadModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSending(true);
-    const payload = {
-      fields: [
-        { name: "firstname", value: lead.name },
-        { name: "email", value: lead.email },
-        { name: "phone", value: lead.phone },
-      ],
-      context: { pageUri: window.location.href, pageName: "Calculadora ROI RevTrack" },
-    };
     try {
-      const PORTAL_ID = "50945418";
-      const FORM_ID = "acdb15ef-05e4-4c1c-8dc4-3bb210588b55";
-      await fetch(`https://api.hsforms.com/submissions/v3/integration/submit/${PORTAL_ID}/${FORM_ID}`, {
+      await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          teamSize: inputs.teamSize,
+          regime: inputs.regime,
+          annualSavings: calc.annualSavings,
+          inefficiencyCost: calc.inefficiencyCost,
+        }),
       });
     } catch { /* silently degrade */ }
     setSending(false);
