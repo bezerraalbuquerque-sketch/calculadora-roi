@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { NumericFormat } from "react-number-format";
+import { NumericFormat, PatternFormat } from "react-number-format";
 import {
   BarChart,
   Bar,
@@ -333,9 +333,13 @@ function LeadModal({
                 </div>
                 <div className="relative">
                   <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    required type="tel" placeholder="Telefone (WhatsApp)" value={lead.phone}
-                    onChange={(e) => setLead((p) => ({ ...p, phone: e.target.value }))}
+                  <PatternFormat
+                    required
+                    format="(##) #####-####"
+                    mask="_"
+                    placeholder="(11) 99999-9999"
+                    value={lead.phone}
+                    onValueChange={({ formattedValue }) => setLead((p) => ({ ...p, phone: formattedValue }))}
                     className="w-full pl-9 pr-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
                 </div>
@@ -513,9 +517,22 @@ export default function ROICalculator() {
     <div className="py-6 px-4 pb-10">
       {/* Intro */}
       <div className="max-w-5xl mx-auto mb-10 text-center">
-        <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
-          <Zap size={12} />
-          Calculadora de ROI — RevTrack Pulse
+        <div className="flex items-center justify-center gap-3 mb-4 flex-wrap">
+          <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-full">
+            <Zap size={12} />
+            Calculadora de ROI — RevTrack Pulse
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              const url = buildWhatsAppUrl(inputs.teamSize, calc.inefficiencyCost);
+              window.open(url, "_blank");
+            }}
+            className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20b856] text-white font-bold py-1.5 px-4 rounded-full text-xs transition-colors shadow-md shadow-green-200"
+          >
+            <WhatsAppIcon />
+            Quero Testar Grátis
+          </motion.button>
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3 leading-tight">
           Quanto sua empresa perde gerindo<br className="hidden md:block" /> comissões em planilhas?
