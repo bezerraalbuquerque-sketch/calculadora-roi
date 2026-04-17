@@ -10,6 +10,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Calculadora de ROI — RevTrack Pulse",
   description: "Descubra quanto sua empresa perde gerindo comissões em planilhas e quanto a RevTrack pode recuperar.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 const faqSchema = {
