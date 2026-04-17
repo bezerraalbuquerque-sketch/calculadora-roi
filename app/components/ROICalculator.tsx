@@ -22,6 +22,7 @@ import {
   CheckCircle,
   X,
   Mail,
+  Phone,
   User,
   Zap,
   Shield,
@@ -47,7 +48,7 @@ interface Inputs {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const WA_NUMBER = "5511999999999"; // ← Substituir pelo número real
+const WA_NUMBER = "551152540869";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -219,7 +220,7 @@ function LeadModal({
   calc: { annualSavings: number; errorCost: number; inefficiencyCost: number };
   inputs: Inputs;
 }) {
-  const [lead, setLead] = useState({ name: "", email: "" });
+  const [lead, setLead] = useState({ name: "", email: "", phone: "" });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
 
@@ -230,6 +231,7 @@ function LeadModal({
       fields: [
         { objectTypeId: "0-1", name: "firstname", value: lead.name },
         { objectTypeId: "0-1", name: "email", value: lead.email },
+        { objectTypeId: "0-1", name: "phone", value: lead.phone },
         { objectTypeId: "0-1", name: "roi_annual_savings", value: String(Math.round(calc.annualSavings)) },
         { objectTypeId: "0-1", name: "team_size", value: String(inputs.teamSize) },
         { objectTypeId: "0-1", name: "monthly_error_cost", value: String(Math.round(calc.errorCost)) },
@@ -332,6 +334,14 @@ function LeadModal({
                   <input
                     required type="email" placeholder="E-mail corporativo" value={lead.email}
                     onChange={(e) => setLead((p) => ({ ...p, email: e.target.value }))}
+                    className="w-full pl-9 pr-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="relative">
+                  <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    required type="tel" placeholder="Telefone (WhatsApp)" value={lead.phone}
+                    onChange={(e) => setLead((p) => ({ ...p, phone: e.target.value }))}
                     className="w-full pl-9 pr-4 py-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
                 </div>
