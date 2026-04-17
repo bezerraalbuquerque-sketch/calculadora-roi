@@ -175,7 +175,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 
 function GatedOverlay({ onUnlock }: { onUnlock: () => void }) {
   return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-white/60 backdrop-blur-sm p-6 text-center">
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-start pt-10 rounded-2xl bg-white/60 backdrop-blur-sm p-6 text-center">
       <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-4 shadow-sm">
         <Lock size={24} className="text-blue-600" />
       </div>
