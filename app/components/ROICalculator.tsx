@@ -133,10 +133,11 @@ function NumberInput({
 
 // ─── Metric card ──────────────────────────────────────────────────────────────
 
-function MetricCard({ icon: Icon, label, value, sub, color }: {
+function MetricCard({ icon: Icon, label, value, sub, color, tooltip }: {
   icon: React.ElementType; label: string; value: string; sub?: string;
-  color: "green" | "blue" | "red" | "yellow";
+  color: "green" | "blue" | "red" | "yellow"; tooltip?: string;
 }) {
+  const [showTip, setShowTip] = useState(false);
   const palettes = {
     green: { bg: "bg-green-50", text: "text-green-600", val: "text-green-700", icon: "text-green-500" },
     blue:  { bg: "bg-blue-50",  text: "text-blue-600",  val: "text-blue-700",  icon: "text-blue-500"  },
@@ -146,10 +147,39 @@ function MetricCard({ icon: Icon, label, value, sub, color }: {
   const p = palettes[color];
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-      className={`${p.bg} rounded-2xl p-5 flex flex-col gap-2`}>
+      className={`${p.bg} rounded-2xl p-5 flex flex-col gap-2 relative`}>
       <div className="flex items-center gap-2">
         <Icon size={18} className={p.icon} />
-        <span className={`text-xs font-semibold uppercase tracking-wide ${p.text}`}>{label}</span>
+        <span className={`text-xs font-semibold uppercase tracking-wide ${p.text} flex-1`}>{label}</span>
+        {tooltip && (
+          <div className="relative">
+            <button
+              onMouseEnter={() => setShowTip(true)}
+              onMouseLeave={() => setShowTip(false)}
+              onClick={() => setShowTip((v) => !v)}
+              className="text-slate-300 hover:text-slate-500 transition-colors"
+              aria-label="Saiba mais"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+              </svg>
+            </button>
+            <AnimatePresence>
+              {showTip && (
+                <motion.div
+                  initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 bottom-6 z-20 w-56 bg-slate-800 text-white text-xs rounded-xl p-3 shadow-xl leading-relaxed"
+                >
+                  {tooltip}
+                  <div className="absolute bottom-[-5px] right-2 w-2.5 h-2.5 bg-slate-800 rotate-45" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
       <p className={`text-2xl font-bold ${p.val}`}>{value}</p>
       {sub && <p className="text-xs text-slate-500">{sub}</p>}
@@ -482,7 +512,7 @@ export default function ROICalculator() {
     const churnRecovery = monthlySalesVolume * 0.01;
     const inefficiencyCost = hoursWasteCost + errorCost + legalRiskMonthly;
     const manualTotal = totalPeopleCost + inefficiencyCost;
-    const revtrackCost = teamSize * 49;
+    const revtrackCost = Math.max(145, teamSize * 49);
     const revtrackTotal = totalPeopleCost + revtrackCost;
     const monthlySavings = inefficiencyCost + churnRecovery - revtrackCost;
     const annualSavings = monthlySavings * 12;
@@ -619,16 +649,28 @@ export default function ROICalculator() {
               <div className="grid grid-cols-2 gap-4">
                 <MetricCard icon={AlertTriangle} label="Custo de Erros / Mês" value={fmt(calc.errorCost)}
                   sub={inputs.regime === "clt" ? `${inputs.errorRate.toFixed(1)}% s/ comissões × 1.7× CLT` : `${inputs.errorRate.toFixed(1)}% sobre ${fmt(calc.totalCommissions)} em comissões`}
-                  color="red" />
+                  color="red"
+                  tooltip={inputs.regime === "clt"
+                    ? `Calculado sobre o total de comissões pagas (não o faturamento). No CLT, um erro reflete em FGTS, 13º e férias — por isso aplicamos o multiplicador 1.7× sobre o valor base do erro.`
+                    : `Calculado sobre o total de comissões pagas. Representa o valor médio pago incorretamente por mês, com base na taxa de erro informada.`}
+                />
                 <MetricCard icon={Clock} label="Custo de Horas / Mês" value={fmt(calc.hoursWasteCost)}
                   sub={inputs.regime === "clt" ? `${calc.effectiveMgmtHours.toFixed(0)}h (+20% complexidade CLT)` : `${inputs.mgmtHours}h × R$${inputs.managerHourlyRate}/h`}
-                  color="yellow" />
+                  color="yellow"
+                  tooltip={inputs.regime === "clt"
+                    ? `No CLT, o gestor precisa calcular reflexos trabalhistas (médias para férias, 13º e rescisão), adicionando ~20% de tempo ao processo. O custo é calculado pelo valor/hora do gestor.`
+                    : `Horas mensais gastas calculando comissões manualmente, multiplicadas pelo custo/hora do gestor responsável.`}
+                />
                 <MetricCard icon={DollarSign} label="Ineficiência Total / Mês" value={fmt(calc.inefficiencyCost)}
                   sub={inputs.regime === "clt" ? "Erros + horas + risco jurídico" : "Horas + erros em planilha"}
-                  color="red" />
+                  color="red"
+                  tooltip={`Soma de todos os custos evitáveis: horas de gestão desperdiçadas, erros nos pagamentos${inputs.regime === "clt" ? " e estimativa de passivo jurídico trabalhista" : ""}. É o valor que a RevTrack pode eliminar.`}
+                />
                 <MetricCard icon={Shield} label="Plano RevTrack / Mês" value={fmt(calc.revtrackCost)}
-                  sub={`R$ 49 × ${inputs.teamSize} vendedor${inputs.teamSize > 1 ? "es" : ""}`}
-                  color="blue" />
+                  sub={calc.revtrackCost === 145 ? `Valor mínimo do plano (R$ 145/mês)` : `R$ 49 × ${inputs.teamSize} vendedor${inputs.teamSize > 1 ? "es" : ""}`}
+                  color="blue"
+                  tooltip={`R$ 49 por vendedor/mês, com valor mínimo de R$ 145/mês. Inclui automação completa de comissões, dashboard para vendedores e relatórios de auditoria.`}
+                />
               </div>
 
               {/* Alerta risco jurídico CLT */}
