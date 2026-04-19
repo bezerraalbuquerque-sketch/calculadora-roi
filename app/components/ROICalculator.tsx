@@ -221,7 +221,7 @@ function GatedOverlay({ onUnlock }: { onUnlock: () => void }) {
         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl text-sm flex items-center gap-2 shadow-lg shadow-blue-200 transition-colors"
       >
         <Lock size={14} />
-        Desbloquear Análise Detalhada
+        Descobrir Como Economizar
       </motion.button>
     </div>
   );
